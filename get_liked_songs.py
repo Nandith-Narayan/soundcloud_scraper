@@ -9,7 +9,7 @@ from tqdm import tqdm
 
 PATH_TO_DRIVER = "chrome_driver/chromedriver.exe" # Path to the chrme driver
 HEADLESS = True
-USER = ""
+USER = "user-1902257213123123"
 
 def init():
     options = Options()
@@ -43,6 +43,8 @@ def main():
     progress_bar = tqdm(total=num_likes)
     progress_bar.update(len(songs))
     prev_val = len(songs)
+    prev_scroll_height = 0
+    num_still_updates = 0
     while len(songs) < num_likes:
         scroll_height = driver.execute_script("return document.body.scrollHeight;")   
         driver.execute_script(f"window.scrollTo(0, {scroll_height});")
@@ -50,6 +52,18 @@ def main():
         songs = driver.find_elements(By.CLASS_NAME , "soundList__item")
         progress_bar.update(len(songs)-prev_val)
         prev_val = len(songs)
+        
+        if prev_scroll_height == scroll_height:
+            num_still_updates += 1
+        else:
+            num_still_updates = 0
+        if num_still_updates > 5:
+            print(f"Only found {len(songs)} Songs.")
+            break
+        
+        prev_scroll_height = scroll_height
+        
+        
     progress_bar.close()
     
     with codecs.open("song_list.txt", "w", "utf-8-sig") as file:          
